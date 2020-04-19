@@ -31,12 +31,12 @@ public class Logger {
     }
 
     private void addToList(int value){
-        logList.add(String.format("%d:%d\n",i,value));
+        logList.add(String.format("%d:%d",i,value));
         i++;
     }
 
     private void addToList(String value){
-        logList.add(String.format("%d:%s\n",i,value));
+        logList.add(String.format("%d:%s",i,value));
         i++;
     }
 

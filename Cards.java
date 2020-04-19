@@ -66,7 +66,9 @@ public class Cards {
         return "";
     }
 
-
+    /*
+     load cards from file 'filename' in currrent directory
+     */
     public int load(String filename) throws   IOException {
 
         File file = new File(  "./"+filename);
@@ -87,7 +89,10 @@ public class Cards {
         return count;
     }
 
-
+    /*
+    save cards to file 'filename" in current directory
+    line :     term:definition:numbererror
+     */
     public int  export(String filename) throws IOException {
 
         File file = new File(  "./"+filename);
@@ -96,7 +101,7 @@ public class Cards {
         for(Map.Entry<String,String> card : cards.entrySet())  {
            String term= card.getKey();
            String definition=card.getValue();
-           int error = errors.get(term);
+           int error = errors.getOrDefault(term,0);
             try {
                 writer.write(term+":"+definition+":"+ error+"\n");
             } catch (IOException e) {
@@ -119,13 +124,9 @@ public class Cards {
     }
 
     public int maxError() {
-        int max=0;
-
-        for(int error : errors.values()){
-            max  = max < error ? error : max;
-        }
-
-        return max;
+        return  errors.values()
+                .stream()
+                .reduce(0,Math::max);
     }
 
     public List<Card> findHardest() {
