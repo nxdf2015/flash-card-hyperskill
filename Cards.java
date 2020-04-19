@@ -2,18 +2,18 @@ package flashcards;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Cards {
     private final Random random;
-    private LinkedHashMap<String,String> cards;
+    private final LinkedHashMap<String,Integer> errors;
+    private final LinkedHashMap<String,String> cards;
 
     public Cards()
     {
         this.cards = new LinkedHashMap<>();
+        this.errors = new LinkedHashMap<>();
         this.random= new Random();
     }
 
@@ -38,7 +38,8 @@ public class Cards {
     }
 
     public boolean remove(String term) {
-        return cards.remove(term)  != null;
+        errors.remove(term);
+        return cards.remove(term)  != null ;
     }
 
     public Card getRandomCard() {
@@ -47,7 +48,8 @@ public class Cards {
 
         for(Map.Entry<String,String> card : cards.entrySet()){
             if (id == i){
-                return Card.of(card.getKey(),card.getValue());
+
+                return Card.of(card.getKey(),card.getValue(),this);
             }
             i++;
         }
@@ -64,6 +66,7 @@ public class Cards {
         return "";
     }
 
+
     public int load(String filename) throws   IOException {
 
         File file = new File(  "./"+filename);
@@ -75,19 +78,17 @@ public class Cards {
         while (in.hasNext()){
 
             String line = in.nextLine();
-
             String[]  card =line.split(":");
             cards.put(card[0],card[1]);
+            errors.put(card[0],Integer.parseInt(card[2]));
             count++;
         }
 
         return count;
-
-
     }
 
-    public int  export(String filename) throws IOException {
 
+    public int  export(String filename) throws IOException {
 
         File file = new File(  "./"+filename);
 
@@ -95,8 +96,9 @@ public class Cards {
         for(Map.Entry<String,String> card : cards.entrySet())  {
            String term= card.getKey();
            String definition=card.getValue();
+           int error = errors.get(term);
             try {
-                writer.write(term+":"+definition+"\n");
+                writer.write(term+":"+definition+":"+ error+"\n");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -104,5 +106,34 @@ public class Cards {
         writer.close();
         return cards.size();
 
+    }
+
+    public void updateError(String term) {
+        errors.put(term, errors.getOrDefault(term,0) + 1);
+    }
+
+    public void resetStats() {
+        for(String term : errors.keySet()){
+            errors.put(term,0);
+        }
+    }
+
+    public int maxError() {
+        int max=0;
+
+        for(int error : errors.values()){
+            max  = max < error ? error : max;
+        }
+
+        return max;
+    }
+
+    public List<Card> findHardest() {
+        int maxError = maxError();
+      return   cards.keySet()
+                .stream()
+                .filter(term -> errors.getOrDefault(term,0) == maxError)
+                .map(term -> Card.of(term, cards.get(term),null))
+                .collect(Collectors.toList());
     }
 }
